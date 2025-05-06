@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <title>班級戀愛股市</title>
+  <style>
+    body {
+      font-family: 'Arial', sans-serif;
+      background-color: #FFFFFF;
+      color: #2C3E50;
+      padding: 20px;
+    }
+    h1 {
+      text-align: center;
+      color: #2980B9;
+    }
+    .pair {
+      border: 1px solid #BDC3C7;
+      border-radius: 12px;
+      padding: 12px;
+      margin-bottom: 10px;
+      background-color: #ECF0F1;
+    }
+    button {
+      padding: 5px 10px;
+      border: none;
+      background-color: #3498DB;
+      color: white;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+    .event-form {
+      margin-top: 30px;
+      background-color: #F9F9F9;
+      padding: 15px;
+      border-radius: 10px;
+    }
+    textarea {
+      width: 100%;
+      height: 60px;
+      border: 1px solid #BDC3C7;
+    }
+    .balance {
+      text-align: center;
+      margin-bottom: 20px;
+      font-size: 18px;
+      color: #2980B9;
+    }
+    .select-option {
+      margin-top: 10px;
+    }
+  </style>
+</head>
+<body>
+  <h1>班級戀愛股市</h1>
+
+  <!-- 顯示用戶擁有的幣 -->
+  <div class="balance">
+    目前幣數：<strong id="coinBalance">100</strong> 幣
+  </div>
+
+  <div id="pair-list"></div>
+
+  <div class="event-form">
+    <h2>📣 匿名投稿事件</h2>
+    <label for="pairSelect">選擇配對：</label>
+    <select id="pairSelect"></select><br><br>
+    
+    <label for="eventText">事件內容：</label><br>
+    <textarea id="eventText" placeholder="今天看到他們一起走路..."></textarea><br><br>
+
+    <label for="eventType">選擇事件類型：</label><br>
+    <select id="eventType" class="select-option">
+      <option value="positive">正 - 在一起</option>
+      <option value="negative">負 - 分手</option>
+    </select><br><br>
+
+    <button onclick="submitEvent()">送出投稿</button>
+  </div>
+
+  <script>
+    const pairs = [
+      { name: "勝 × 凝", score: 0, investedCoins: 0, events: [], isTogether: false },
+      { name: "熊 × 張", score: 0, investedCoins: 0, events: [], isTogether: false },
+      { name: "張 × 芊", score: 0, investedCoins: 0, events: [], isTogether: false },
+      { name: "芊 × 梁", score: 0, investedCoins: 0, events: [], isTogether: false }
+    ];
+
+    let coins = 100; // 用戶初始幣數
+
+    function renderPairs() {
+      const list = document.getElementById('pair-list');
+      const select = document.getElementById('pairSelect');
+      list.innerHTML = '';
+      select.innerHTML = '';
+
+      pairs.forEach((pair, index) => {
+        const div = document.createElement('div');
+        div.className = 'pair';
+        div.innerHTML = `
+          <h3>${pair.name}</h3>
+          <p>戀愛股價：<strong>${pair.score}</strong></p>
+          <p>目前狀態：${pair.isTogether ? "在一起" : "未在一起"}</p>
+          <button onclick="invest(${index})">投資 ❤️ (花費 10 幣)</button>
+          <ul>${pair.events.map(e => `<li>📝 ${e}</li>`).join('')}</ul>
+        `;
+        list.appendChild(div);
+
+        const option = document.createElement('option');
+        option.value = index;
+        option.textContent = pair.name;
+        select.appendChild(option);
+      });
+    }
+
+    function invest(index) {
+      if (coins >= 10) { // 確保用戶有足夠的幣來投資
+        pairs[index].score++;
+        pairs[index].investedCoins += 10;
+        coins -= 10; // 扣除 10 幣
+        renderPairs();
+        updateCoinBalance();
+      } else {
+        alert("幣不足，無法投資！");
+      }
+    }
+
+    function submitEvent() {
+      const index = document.getElementById('pairSelect').value;
+      const text = document.getElementById('eventText').value.trim();
+      const eventType = document.getElementById('eventType').value;
+
+      if (text) {
+        if (eventType === "positive") {
+          if (!pairs[index].isTogether) {
+            // 如果兩人還沒在一起，設為在一起並大幅增加股價
+            pairs[index].isTogether = true;
+            pairs[index].score *= 50;  // 恋愛股價 * 50
+            coins += pairs[index].investedCoins * 50; // 投入的幣值 * 50
+          } else {
+            // 每次提交互動加成
+            pairs[index].score *= 1.2; // 恋愛股價 * 1.2
+            coins += 5; // 每次提交獲得5幣
+          }
+        } else if (eventType === "negative" && pairs[index].isTogether) {
+          // 如果是負面投稿並且兩人在一起，扣除投入幣數的2倍
+          pairs[index].score /= 2; // 恋愛股價減半
+          coins -= pairs[index].investedCoins * 2; // 扣除投入的2倍
+        }
+
+        pairs[index].events.push(text);
+        document.getElementById('eventText').value = '';
+        renderPairs();
+        updateCoinBalance();
+      } else {
+        alert("請輸入事件內容！");
+      }
+    }
+
+    function updateCoinBalance() {
+      document.getElementById('coinBalance').textContent = coins; // 更新顯示的幣數
+    }
+
+    renderPairs();
+  </script>
+</body>
+</html>
